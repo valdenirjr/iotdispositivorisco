@@ -9,7 +9,7 @@
 #include <UniversalTelegramBot.h>
 #include <bsec.h>
 #include <EEPROM.h>
-#include "acerts.h"
+#include "bcerts.h"
 #include "pwifi.h"
 
 
@@ -40,7 +40,10 @@
 //#define ...Pin 39
 //#define ...Pin 36
 
-const uint8_t bsec_config_iaq[] = { #include "config/generic_33v_3s_4d/bsec_iaq.txt"};
+const uint8_t bsec_config_iaq[] = {
+ #include "config/generic_33v_3s_4d/bsec_iaq.txt"
+};
+
 #define PERIODO_SALVA_ESTADO UINT32_C(360 * 60 * 1000) //360 minutors ou 4 vezes ao dia;
 
 #define MODULO(x) ((x)>=0?(x):-(x))
@@ -215,7 +218,7 @@ void atualizaEstadoBME(){
       stateUpdateCounter++;
     }
   } else {
-    if ((stateUpdateCounter * STATE_SAVE_PERIOD) < millis()) {
+    if ((stateUpdateCounter * PERIODO_SALVA_ESTADO) < millis()) {
       update = true;
       stateUpdateCounter++;
     }
@@ -384,8 +387,8 @@ String mensagemRetorno(){
         mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + ";\n";
         mensagem += "Pressao BME =" + String(pressaoAtualBME) + "hPa; Altitude BME=" + String(altitudeAtualBME) + "m; Hall=" + String(hallAtual) + ";\n";
         mensagem += "Tempo de funcionamento =" + String((timer/1000)/60) + "m;\n";  
-        mensagem += "Risco: Ambiente =" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
-        mensagem += "Risco: "+ String(risco_msg) + ";\n";
+        mensagem += "Risco: Ambiente=" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
+        mensagem += "Log: "+ String(risco_msg) + "\n";
     return mensagem;
 }
 
