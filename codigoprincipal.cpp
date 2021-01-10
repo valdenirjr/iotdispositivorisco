@@ -96,6 +96,7 @@ float umidadeInicialDHT = 0.0;
  
 int num_mensagens_recebidas_telegram = 0;
 String resposta_msg_recebida;
+String risco_msg;
 
 
 void configuraBME(void);
@@ -287,65 +288,66 @@ void getHALL(){
 
 void verificaRisco(){
    riscoAmbiente = 2;
-
+   risco_msg = "";
+ 
    float tempVarDHT = MODULO(tempInicialDHT - tempAtualDHT);
    float tempVarBME = MODULO(tempInicialBME - tempAtualBME);
    int gasVarMQa = MODULO(gasInicialMQa - gasAtualMQa);
    float gasVarBME = MODULO(gasInicialBME - gasAtualBME);
    int iaqVarBME = MODULO(iaqInicialBME - iaqAtualBME);
-
+ 
   if (tempVarDHT != 0 && tempVarBME != 0 ){
       if ((((tempVarDHT / tempAtualDHT) * 100) > 20) || (((tempVarBME / tempAtualBME) * 100) > 20)){
          riscoAmbiente = riscoAmbiente * 3;
-         Serial.printf("variacao temperatura maior que 20");
+         risco_msg +="Var temp>20; ";
       }
    }
   if (gasVarMQa != 0 && gasVarBME != 0 && iaqAcAtualBME >0){
       if ((((gasVarMQa / gasAtualMQa) * 100) > 20) || ((((gasVarBME / gasAtualBME) * 100) > 20) && iaqAcAtualBME > 0)){
          riscoAmbiente = riscoAmbiente * 5;
-         Serial.printf("variacao gas maior que 20");
+         risco_msg +="Var Gas>20; ";
       }
   } 
   if (iaqVarBME != 0){
-    if ((((iaqVarBME / iaqAtualBME) * 100) > 20) && iaqAcAtualBME >0){
+    if ((((iaqVarBME / iaqAtualBME) * 100) > 40) && iaqAcAtualBME >0){
       riscoAmbiente = riscoAmbiente * 3;
-      Serial.printf("variacao IAQ maior que 20");
+      risco_msg +="Var iaq>40; ";
     }
   } 
-  if (tempAtualDHT > 35.00 && tempAtualDHT != 0.0 ){
-    riscoAmbiente = riscoAmbiente * 3;
-     Serial.printf(" temperatura maior que 35");
+  if (tempAtualDHT > 35.00 || tempAtualBME > 35.00){
+     riscoAmbiente = riscoAmbiente * 3;
+     risco_msg +="Temp > 35; ";
    }
   
-  if (umidadeAtualDHT < 50.00 && umidadeAtualDHT != 0.0) {
+  if ((umidadeAtualDHT < 20.00 && umidadeAtualDHT != 0.0) || (umidadeAtualBME < 20.00 && umidadeAtualBME != 0.0)) {
     riscoAmbiente = riscoAmbiente * 2; 
-     Serial.printf("variacao umidade menor que 50");
+    risco_msg +="Umid  < 20; ";
   }
   
   if ((gasAtualMQa > 1000) || (gasAtualBME < 10000.00 && iaqAcAtualBME > 0)) {
     riscoAmbiente = riscoAmbiente * 4; 
     if (gasAtualMQa > 2000){ 
      riscoAmbiente = riscoAmbiente * (gasAtualMQa/1000); 
-     Serial.printf("gas maior que 1000 ou menor que 10000");
+     risco_msg +="Gas MQa >1000 ou BME <10.000; ";
     }
   }
 
    if ((iaqAtualBME > 100) && iaqAcAtualBME > 0){
      if (iaqAtualBME > 301){ //very bad
        riscoAmbiente = riscoAmbiente * 11;
-       Serial.printf(" IAQ maior que 301");
+       risco_msg +="IAQ > 301; ";
      } else {
         if (iaqAtualBME > 201){ // worse
            riscoAmbiente = riscoAmbiente * 9;
-           Serial.printf(" IAQ maior que 201");
+           risco_msg +="IAQ entre 201 e 300; ";
         } else {
            if (iaqAtualBME > 151){ //bad
              riscoAmbiente = riscoAmbiente * 7;
-             Serial.printf(" IAQ maior que 151");
+             risco_msg +="IAQ entre 151 e 200; ";
            } else{
               if (iaqAtualBME > 101){ //little bad
                  riscoAmbiente = riscoAmbiente * 5;
-                 Serial.printf(" IAQ maior que 100");
+                 risco_msg +="IAQ entre 101 e 150; ";
              } 
            }
          }
@@ -354,12 +356,12 @@ void verificaRisco(){
   
   if (presencaAtual == 0 && riscoAmbiente > 2){
     riscoAmbiente = riscoAmbiente * 4;
-    Serial.printf("sem presenca");
+    risco_msg +="Sem presença; ";
   }
   
   if (tempAtualDHT > 45.00 || gasAtualMQa > 3000 || (umidadeAtualDHT < 20 && umidadeAtualDHT != 0.0) || (gasAtualBME < 5000.0 && gasAtualBME != 0 && iaqAcAtualBME > 0)) {
    riscoAmbiente = riscoAmbiente * 8;
-   Serial.printf("limites maximos encontrados");
+   risco_msg +="Limitas máximos excedidos! ";
   }
   
   if (riscoAmbiente > 24 || riscoPredio > 90){
@@ -381,8 +383,9 @@ String mensagemRetorno(){
         mensagem += "Umidade: aBME=" + String(umidadeAtualBME) + "%r.H; iBME=" + String(umidadeInicialBME) + "%r.H; aDHT=" + String(umidadeAtualDHT) + "%r.H; iDHT=" + String(umidadeInicialDHT) + ";\n";
         mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + ";\n";
         mensagem += "Pressao BME =" + String(pressaoAtualBME) + "hPa; Altitude BME=" + String(altitudeAtualBME) + "m; Hall=" + String(hallAtual) + ";\n";
-        mensagem += "Risco: Ambiente =" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
         mensagem += "Tempo de funcionamento =" + String((timer/1000)/60) + "m;\n";  
+        mensagem += "Risco: Ambiente =" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
+        mensagem += "Risco: "+ String(risco_msg) + ";\n";
     return mensagem;
 }
 
