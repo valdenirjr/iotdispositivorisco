@@ -78,10 +78,12 @@ float tempAtualBME = 0.0;
 float umidadeAtualBME = 0.0;
 float pressaoAtualBME = 0.0;
 float gasAtualBME = 0.0;
+float gasAualPercBME = 0;
 float altitudeAtualBME = 0.0;
 float iaqAtualBME = 0;
 uint8_t iaqAcAtualBME = 0;
 uint8_t gasAcAtualBME = 0;
+
 
 unsigned long timer = millis();
 unsigned long lastTime[4]{ 3000, 10000, 0, 300000 };
@@ -106,10 +108,10 @@ void configuraBME(void);
 void checkSituacaoBME(void);
 void carregaEstadoBME(void);
 void atualizaEstadoBME(void);
-void getBME(void);
-void getDHT11(void);
-void getMQ2(void);
-void getHALL(void);
+void consultaBME(void);
+void consultaDHT(void);
+void consultaMQ2(void);
+void consultaHALL(void);
 void verificaRisco(void);
 String mensagemRetorno(void);
 void inicializaPin(void);
@@ -178,6 +180,7 @@ void checkSituacaoBME(void){
        gasAtualBME = 0.0;
        iaqAtualBME = 0;
        iaqAcAtualBME = 0;
+       gasAualPercBME - 0;
        return;
     } else {
        output = String(iaqSensor.bme680Status);
@@ -241,7 +244,7 @@ void atualizaEstadoBME(){
 }
 
 
-void getBME(){
+void consultaBME(){
    tempAtualBME = iaqSensor.temperature;
    pressaoAtualBME = iaqSensor.pressure;
    umidadeAtualBME = iaqSensor.humidity;
@@ -249,12 +252,13 @@ void getBME(){
    iaqAtualBME = iaqSensor.iaq;
    iaqAcAtualBME = iaqSensor.iaqAccuracy;
    gasAcAtualBME = iaqSensor.co2Accuracy + iaqSensor.breathVocAccuracy;
+   gasAualPercBME = iaqSensor.gasPercentage;
    float atmospheric = pressaoAtualBME / 100.0F;
    altitudeAtualBME = 44330.0 * (1.0 - pow(atmospheric / 1013.25, 0.1903));
    atualizaEstadoBME();
 }
 
-void getDHT11(){
+void consultaDHT(){
   umidadeAtualDHT = dht.readHumidity();
   tempAtualDHT = dht.readTemperature();
   if (isnan(umidadeAtualDHT) || isnan(tempAtualDHT)){
@@ -268,7 +272,7 @@ void getDHT11(){
  calorAtualDHT = dht.computeHeatIndex(tempAtualDHT, umidadeAtualDHT, false);
 }
 
-void getMQ2(){
+void consultaMQ2(){
   gasAtualMQa = analogRead(mq2aPin);
   gasAtualMQd = digitalRead(mq2dPin);
    if (gasAtualMQa < 500 && gasAtualMQd == 0) {
@@ -280,7 +284,7 @@ void getMQ2(){
   } 
 }
 
-void getHALL(){
+void consultaHALL(){
   hallAtual = hallRead();
    if (hallAtual == 0) {
     Serial.printf("\nFalha na leitura do sensor hall!");
@@ -384,7 +388,7 @@ String mensagemRetorno(){
         mensagem += "Temperatura: aBME=" + String(tempAtualBME) + "ºC/iBME=" + String(tempInicialBME) + "ºC/; aDHT=" + String(tempAtualDHT) + "ºC/; iDHT="+ String(tempInicialDHT) + ";\n";
         mensagem += "Qualidade do Ar: aIAQ=" + String(iaqAtualBME) + "; iIAQ=" + String(iaqInicialBME) + "; Acurácia=" + String(iaqAcAtualBME) + ";\n";
         mensagem += "Umidade: aBME=" + String(umidadeAtualBME) + "%r.H; iBME=" + String(umidadeInicialBME) + "%r.H; aDHT=" + String(umidadeAtualDHT) + "%r.H; iDHT=" + String(umidadeInicialDHT) + ";\n";
-        mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + ";\n";
+        mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + "; Percent. Gás BME=" + String(gasAualPercBME) + ";\n";
         mensagem += "Pressao BME =" + String(pressaoAtualBME) + "hPa; Altitude BME=" + String(altitudeAtualBME) + "m; Hall=" + String(hallAtual) + ";\n";
         mensagem += "Tempo de funcionamento =" + String((timer/1000)/60) + "m;\n";  
         mensagem += "Risco: Ambiente=" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
@@ -633,7 +637,7 @@ void setup(){
   }
   inicializaPin();
   configuraWifi();
-  configuraAWS();
+ // configuraAWS();
   configuraTS();
   configuraDHT();
   configuraBME();
@@ -645,18 +649,18 @@ void loop(){
   timer = millis();
 
   if (iaqSensor.run()) {
-    getBME();
+    consultaBME();
     Serial.printf("\r-\r");
    }
 
   
   if ((timer - lastTime[0]) > timerDelay[0]) {
-   getDHT11();
-   getMQ2();
-   getHALL();
+   consultaDHT();
+   consultaMQ2();
+   consultaHALL();
    checkSituacaoBME();
    Serial.print(mensagemRetorno());
-   reconectaAWS();
+  // reconectaAWS();
    lastTime[0] = millis(); 
   }
 
@@ -669,7 +673,7 @@ void loop(){
   }
 
   if ((timer - lastTime[2]) > timerDelay[2]) {
-   enviaAWS();
+   //enviaAWS();
    enviaTS();
    lastTime[2] = millis();
    Serial.printf("Loop 3\n");
