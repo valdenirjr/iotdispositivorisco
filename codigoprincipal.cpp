@@ -9,7 +9,7 @@
 #include <UniversalTelegramBot.h>
 #include <bsec.h>
 #include <EEPROM.h>
-#include "bcerts.h"
+#include "acerts.h"
 #include "pwifi.h"
 
 
@@ -303,7 +303,7 @@ void verificaRisco(){
    float gasVarBME = MODULO(gasInicialBME - gasAtualBME);
    int iaqVarBME = MODULO(iaqInicialBME - iaqAtualBME);
  
-  if (tempVarDHT != 0 && tempVarBME != 0 ){
+  if (tempVarDHT != 0 && tempVarBME != 0 && tempAtualBME != 0 && tempAtualDHT ! = 0  && tempInicialBME != 0 && tempInicialDHT !=0){
       if ((((tempVarDHT / tempAtualDHT) * 100) > 20) || (((tempVarBME / tempAtualBME) * 100) > 20)){
          riscoAmbiente = riscoAmbiente * 3;
          risco_msg +="Var temp>20; ";
@@ -316,9 +316,9 @@ void verificaRisco(){
       }
   } 
   if (iaqVarBME != 0){
-    if ((((iaqVarBME / iaqAtualBME) * 100) > 40) && iaqAcAtualBME >0){
+    if ((((iaqVarBME / iaqAtualBME) * 100) > 50) && iaqAcAtualBME >0){
       riscoAmbiente = riscoAmbiente * 3;
-      risco_msg +="Var iaq>40; ";
+      risco_msg +="Var iaq>50; ";
     }
   } 
   if (tempAtualDHT > 35.00 || tempAtualBME > 35.00){
