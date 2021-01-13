@@ -9,24 +9,22 @@
 #include <UniversalTelegramBot.h>
 #include <bsec.h>
 #include <EEPROM.h>
-#include "acerts.h"
-#include "pwifi.h"
-
+#include "espX_sec.h"
 
 //Definição dos pinos
-//#define bmeCSPin 15 // Sensor BME680 SPI CS
+//#define ...Pin 15
 //#define ...Pin 2
 #define dhtPin 4    // Sensor DHT11
 //#define ...Pin 16
 //#define ...Pin 17
 //#define ...Pin 5 
-//#define bmeSDKPin 18 // Sensor BME680 SPI SCL
-//#define bmeMISOPin 19 // Sensor BME680 SPI SDO
+//#define ...Pin 18
+//#define ...Pin 19 
 //#define bme1Pin 21  // Sensor BME680 I2C pino SDA
 //#define ...Pin 3
 //#define ...Pin 1
 //#define bme2Pin 22  // Sensor BME680 I2C pino SCL
-//#define bmeMOSIPin 23 // Sensor BME680 SPI SDA
+//#define ...Pin 23
 //#define ...Pin 13
 #define ledBPin 12
 #define mq2dPin 14  // Sensor MQ2 pino DO
@@ -84,10 +82,9 @@ float iaqAtualBME = 0;
 uint8_t iaqAcAtualBME = 0;
 uint8_t gasAcAtualBME = 0;
 
-
 unsigned long timer = millis();
 unsigned long lastTime[4]{ 3000, 10000, 0, 300000 };
-unsigned long timerDelay[4]{ 3000, 10000, 100000, 300000 };
+unsigned long timerDelay[4]{ 3000, 10000, 60000, 300000 };
 
 String CMD_LIST[] = {"Led R","Led G","Led B","Buz On","Buz Off","Status",};
 
@@ -303,7 +300,7 @@ void verificaRisco(){
    float gasVarBME = MODULO(gasInicialBME - gasAtualBME);
    int iaqVarBME = MODULO(iaqInicialBME - iaqAtualBME);
  
-  if (tempVarDHT != 0 && tempVarBME != 0 && tempAtualBME != 0 && tempAtualDHT ! = 0  && tempInicialBME != 0 && tempInicialDHT !=0){
+  if (tempVarDHT != 0 && tempAtualDHT != 0  && tempInicialDHT != 0 && tempVarBME != 0 && tempAtualBME != 0 && tempInicialBME != 0){
       if ((((tempVarDHT / tempAtualDHT) * 100) > 20) || (((tempVarBME / tempAtualBME) * 100) > 20)){
          riscoAmbiente = riscoAmbiente * 3;
          risco_msg +="Var temp>20; ";
@@ -637,7 +634,7 @@ void setup(){
   }
   inicializaPin();
   configuraWifi();
- // configuraAWS();
+  configuraAWS();
   configuraTS();
   configuraDHT();
   configuraBME();
@@ -660,7 +657,7 @@ void loop(){
    consultaHALL();
    checkSituacaoBME();
    Serial.print(mensagemRetorno());
-  // reconectaAWS();
+   reconectaAWS();
    lastTime[0] = millis(); 
   }
 
@@ -673,7 +670,7 @@ void loop(){
   }
 
   if ((timer - lastTime[2]) > timerDelay[2]) {
-   //enviaAWS();
+   enviaAWS();
    enviaTS();
    lastTime[2] = millis();
    Serial.printf("Loop 3\n");
