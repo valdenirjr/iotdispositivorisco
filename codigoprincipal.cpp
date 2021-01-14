@@ -86,7 +86,7 @@ unsigned long timer = millis();
 unsigned long lastTime[4]{ 3000, 10000, 0, 300000 };
 unsigned long timerDelay[4]{ 3000, 10000, 60000, 300000 };
 
-String CMD_LIST[] = {"Led R","Led G","Led B","Buz On","Buz Off","Status",};
+String CMD_LIST[] = {"Led R","Led G","Led B","Buz On","Buz Off","Status", "Sleep"};
 
 float tempInicialDHT = 0.0;
 float tempInicialBME = 0.0;
@@ -115,6 +115,7 @@ void inicializaPin(void);
 void configuraDHT(void);
 void configuraWifi(void);
 void restartESP(void);
+void sleepESP(int timersleep);
 void configuraTS(void);
 void configuraAWS(void);
 void reconectaAWS(void);
@@ -387,7 +388,7 @@ String mensagemRetorno(){
         mensagem += "Umidade: aBME=" + String(umidadeAtualBME) + "%r.H; iBME=" + String(umidadeInicialBME) + "%r.H; aDHT=" + String(umidadeAtualDHT) + "%r.H; iDHT=" + String(umidadeInicialDHT) + ";\n";
         mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + "; Percent. Gás BME=" + String(gasAualPercBME) + ";\n";
         mensagem += "Pressao BME =" + String(pressaoAtualBME) + "hPa; Altitude BME=" + String(altitudeAtualBME) + "m; Hall=" + String(hallAtual) + ";\n";
-        mensagem += "Tempo de funcionamento =" + String((timer/1000)/60) + "m;\n";  
+        mensagem += "Tempo de funcionamento=" + String((timer/1000)/60) + "m;\n";  
         mensagem += "Risco: Ambiente=" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
         mensagem += "Log: "+ String(risco_msg) + "\n";
     return mensagem;
@@ -420,7 +421,7 @@ void configuraWifi(){
   }
 
   if(WiFi.status() != WL_CONNECTED){
-    restartESP();
+    sleepESP(10);
   } 
     else{
      Serial.printf("\nWifi conectado! Endereço IP: ");
@@ -442,6 +443,19 @@ void restartESP(){
     esp_restart();
 }
 
+void sleepESP(int timerSleep){
+    int sleep = timerSleep * 1000000;
+    digitalWrite(buzPin, HIGH);
+    delay (200);
+    digitalWrite(buzPin, LOW);
+    delay (100);
+    digitalWrite(buzPin, HIGH);
+    delay (200);
+    digitalWrite(buzPin, LOW);
+    esp_sleep_enable_timer_wakeup(sleep);
+    esp_deep_sleep_start();
+}
+
 void configuraTS(){
     ThingSpeak.begin(clientTS);
 }
@@ -460,7 +474,7 @@ void configuraAWS(){
   }
 
   if(!client.connected()){
-     esp_restart();
+     sleepESP(10);
   }
    else{
     Serial.printf("\nAWS iOT conectado! \n");
@@ -586,6 +600,12 @@ String trataMensagemTelegram(String msg_recebida){
     if (msg_recebida.equals(CMD_LIST[5])){
       resposta = mensagemRetorno();
       comando_valido = true;
+    }
+
+   if (msg_recebida.equals(CMD_LIST[6])){
+      resposta = "Kit 01 reinicializado";
+      comando_valido = true;
+  //    sleepESP(120);
     }
 
     if (comando_valido == false){
