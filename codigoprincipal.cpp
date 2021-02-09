@@ -125,6 +125,7 @@ void enviaTS(void);
 void consultaTelegram(void);
 String trataMensagemTelegram(String msg_recebida);
 void ledOn (String tipo);
+void atualizaVLIniciais(void);
 
 
 void configuraBME(){
@@ -642,6 +643,18 @@ void ledOn (String tipo){
   }
 }
 
+
+void atualizaVLIniciais(){
+   tempInicialDHT = tempAtualDHT;
+   tempInicialBME = tempAtualBME;
+   gasInicialMQa = gasAtualMQa;
+   gasInicialBME = gasAtualBME;
+   iaqInicialBME = iaqAtualBME; 
+   umidadeInicialDHT = umidadeAtualDHT;
+   umidadeInicialBME = umidadeAtualBME;
+}
+
+
 //-----------------------------------------------------------------------
 
 void setup(){
@@ -697,13 +710,7 @@ void loop(){
   }
  
   if ((timer - lastTime[3]) > timerDelay[3]) {
-   tempInicialDHT = tempAtualDHT;
-   tempInicialBME = tempAtualBME;
-   gasInicialMQa = gasAtualMQa;
-   gasInicialBME = gasAtualBME;
-   iaqInicialBME = iaqAtualBME;
-   umidadeInicialDHT = umidadeAtualDHT;
-   umidadeInicialBME = umidadeAtualBME;
+   atualizaVLIniciais();
    lastTime[3] = millis();
    Serial.printf("Loop 4\n");
   }
