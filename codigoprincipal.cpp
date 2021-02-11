@@ -345,19 +345,19 @@ void verificaRisco(){
 
    if ((iaqAtualBME > 100) && iaqAcAtualBME > 0){
      if (iaqAtualBME > 301){ //very bad
-       riscoAmbiente = riscoAmbiente * 11;
+       riscoAmbiente = riscoAmbiente * 9;
        risco_msg +="IAQ > 301; ";
      } else {
         if (iaqAtualBME > 201){ // worse
-           riscoAmbiente = riscoAmbiente * 9;
+           riscoAmbiente = riscoAmbiente * 7;
            risco_msg +="IAQ entre 201 e 300; ";
         } else {
            if (iaqAtualBME > 151){ //bad
-             riscoAmbiente = riscoAmbiente * 7;
+             riscoAmbiente = riscoAmbiente * 5;
              risco_msg +="IAQ entre 151 e 200; ";
            } else{
               if (iaqAtualBME > 101){ //little bad
-                 riscoAmbiente = riscoAmbiente * 5;
+                 riscoAmbiente = riscoAmbiente * 3;
                  risco_msg +="IAQ entre 101 e 150; ";
              } 
            }
