@@ -317,25 +317,30 @@ void verificaRisco(){
   if (iaqVarBME != 0){
     if ((((iaqVarBME / iaqAtualBME) * 100) > 50) && iaqAcAtualBME >0){
       riscoAmbiente = riscoAmbiente * 3;
-      risco_msg +="Var iaq>50; ";
+      risco_msg +="Var. iaq>50; ";
     }
   } 
   if (tempAtualDHT > 35.00 || tempAtualBME > 35.00){
      riscoAmbiente = riscoAmbiente * 3;
-     risco_msg +="Temp > 35; ";
+     risco_msg +="Temp. > 35; ";
    }
   
   if ((umidadeAtualDHT < 20.00 && umidadeAtualDHT != 0.0) || (umidadeAtualBME < 20.00 && umidadeAtualBME != 0.0)) {
     riscoAmbiente = riscoAmbiente * 2; 
-    risco_msg +="Umid  < 20; ";
+    risco_msg +="Umid.  < 20; ";
   }
   
-  if ((gasAtualMQa > 1000) || (gasAtualBME < 10000.00 && iaqAcAtualBME > 0)) {
-    riscoAmbiente = riscoAmbiente * 4; 
+  if (gasAtualMQa > 1000) {
+    riscoAmbiente = riscoAmbiente * 2;
+    risco_msg +="Gás MQa entre 1k e 2k; ";
     if (gasAtualMQa > 2000){ 
      riscoAmbiente = riscoAmbiente * (gasAtualMQa/1000); 
-     risco_msg +="Gas MQa >1000 ou BME <10.000; ";
+     risco_msg +="Gás MQa >2k; ";
     }
+  }
+  if (gasAtualBME < 10000.00 && iaqAcAtualBME > 0) {
+    riscoAmbiente = riscoAmbiente * 3;
+    risco_msg +="Gás BME <10k; ";
   }
 
    if ((iaqAtualBME > 100) && iaqAcAtualBME > 0){
