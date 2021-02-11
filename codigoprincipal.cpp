@@ -76,7 +76,6 @@ float tempAtualBME = 0.0;
 float umidadeAtualBME = 0.0;
 float pressaoAtualBME = 0.0;
 float gasAtualBME = 0.0;
-float gasAualPercBME = 0;
 float altitudeAtualBME = 0.0;
 float iaqAtualBME = 0;
 uint8_t iaqAcAtualBME = 0;
@@ -179,7 +178,6 @@ void checkSituacaoBME(void){
        gasAtualBME = 0.0;
        iaqAtualBME = 0;
        iaqAcAtualBME = 0;
-       gasAualPercBME - 0;
        return;
     } else {
        output = String(iaqSensor.bme680Status);
@@ -251,7 +249,6 @@ void consultaBME(){
    iaqAtualBME = iaqSensor.iaq;
    iaqAcAtualBME = iaqSensor.iaqAccuracy;
    gasAcAtualBME = iaqSensor.co2Accuracy + iaqSensor.breathVocAccuracy;
-   gasAualPercBME = iaqSensor.gasPercentage;
    float atmospheric = pressaoAtualBME / 100.0F;
    altitudeAtualBME = 44330.0 * (1.0 - pow(atmospheric / 1013.25, 0.1903));
    atualizaEstadoBME();
@@ -392,7 +389,7 @@ String mensagemRetorno(){
         mensagem += "Temperatura: aBME=" + String(tempAtualBME) + "ºC/iBME=" + String(tempInicialBME) + "ºC/; aDHT=" + String(tempAtualDHT) + "ºC/; iDHT="+ String(tempInicialDHT) + ";\n";
         mensagem += "Qualidade do Ar: aIAQ=" + String(iaqAtualBME) + "; iIAQ=" + String(iaqInicialBME) + "; Acurácia=" + String(iaqAcAtualBME) + ";\n";
         mensagem += "Umidade: aBME=" + String(umidadeAtualBME) + "%r.H; iBME=" + String(umidadeInicialBME) + "%r.H; aDHT=" + String(umidadeAtualDHT) + "%r.H; iDHT=" + String(umidadeInicialDHT) + ";\n";
-        mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + "; Percent. Gás BME=" + String(gasAualPercBME) + ";\n";
+        mensagem += "Resistência gases: aBME=" + String(gasAtualBME) + "Ohm; iBME=" + String(gasInicialBME) + "Ohm; aMQ2=" + String(gasAtualMQa) + "kppm; iMQ2=" + String(gasInicialMQa) + "kppm; MQ2 Digital=" + String(gasAtualMQd) + ";\n";
         mensagem += "Pressao BME =" + String(pressaoAtualBME) + "hPa; Altitude BME=" + String(altitudeAtualBME) + "m; Hall=" + String(hallAtual) + ";\n";
         mensagem += "Tempo de funcionamento=" + String((timer/1000)/60) + "m;\n";  
         mensagem += "Risco: Ambiente=" + String(riscoAmbiente) + "; Prédio=" + String(riscoPredio) + ";\n";
