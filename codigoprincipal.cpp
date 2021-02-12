@@ -123,7 +123,7 @@ void enviaAWS(void);
 void enviaTS(void);
 void consultaTelegram(void);
 String trataMensagemTelegram(String msg_recebida);
-void ledOn (String tipo);
+void ledOn (String tipo, int tempo);
 void atualizaVLIniciais(void);
 
 
@@ -158,12 +158,12 @@ void checkSituacaoBME(void){
       output = String(iaqSensor.status);
       Serial.printf("\nFalha na biblioteca BSEC!! código: %s", output);
         Serial.println("Erro BSEC");
-        ledOn ("R");
+        ledOn ("R",100);
         return;
     } else {
        output = String(iaqSensor.status);
        Serial.printf("\nAlerta na biblioteca BSEC!! código: %s", output);
-       ledOn ("R");
+       ledOn ("R",100);
       }
   }
 
@@ -171,7 +171,7 @@ void checkSituacaoBME(void){
     if (iaqSensor.bme680Status < BME680_OK) {
        output = String(iaqSensor.bme680Status);
        Serial.printf("\nFalha na leitura do sensor BME680!! código: %s", output);
-       ledOn ("R");
+       ledOn ("R",100);
        tempAtualBME = 0.0;
        pressaoAtualBME = 0.0;
        umidadeAtualBME = 0.0;
@@ -182,7 +182,7 @@ void checkSituacaoBME(void){
     } else {
        output = String(iaqSensor.bme680Status);
        Serial.printf("\nAlerta no sensor BME680!! codigo: %s", output);
-       ledOn ("R");
+       ledOn ("R",100);
       }
   }
  iaqSensor.status = BSEC_OK;
@@ -259,7 +259,7 @@ void consultaDHT(){
   tempAtualDHT = dht.readTemperature();
   if (isnan(umidadeAtualDHT) || isnan(tempAtualDHT)){
    Serial.printf("\nFalha na leitura do sensor DHT!");
-   ledOn ("R");
+   ledOn ("R",100);
    umidadeAtualDHT = 0.0;
    tempAtualDHT = 0.0;
    calorAtualDHT = 0.0;
@@ -273,7 +273,7 @@ void consultaMQ2(){
   gasAtualMQd = digitalRead(mq2dPin);
    if (gasAtualMQa < 500 && gasAtualMQd == 0) {
     Serial.printf("\nFalha na leitura do sensor MQ2!");
-    ledOn ("R");
+    ledOn ("R",100);
     gasAtualMQa = 0;
     gasAtualMQd = 0;
     return;
@@ -284,7 +284,7 @@ void consultaHALL(){
   hallAtual = hallRead();
    if (hallAtual == 0) {
     Serial.printf("\nFalha na leitura do sensor hall!");
-    ledOn ("R");
+    ledOn ("R",100);
     return;
   } 
 }
@@ -328,11 +328,13 @@ void verificaRisco(){
   }
   
   if (gasAtualMQa > 1000) {
-    riscoAmbiente = riscoAmbiente * 2;
-    risco_msg +="Gás MQa entre 1k e 2k; ";
     if (gasAtualMQa > 2000){ 
      riscoAmbiente = riscoAmbiente * (gasAtualMQa/1000); 
      risco_msg +="Gás MQa >2k; ";
+    }
+    else{
+    riscoAmbiente = riscoAmbiente * 2;
+    risco_msg +="Gás MQa entre 1k e 2k; ";
     }
   }
   if (gasAtualBME < 10000.00 && iaqAcAtualBME > 0) {
@@ -369,18 +371,19 @@ void verificaRisco(){
   
   if (tempAtualDHT > 45.00 || gasAtualMQa > 3000 || (umidadeAtualDHT < 20 && umidadeAtualDHT != 0.0) || (gasAtualBME < 5000.0 && gasAtualBME != 0 && iaqAcAtualBME > 0)) {
    riscoAmbiente = riscoAmbiente * 8;
-   risco_msg +="Limitas máximos excedidos! ";
+   risco_msg +="Limites máximos excedidos! ";
   }
-  
-  if (riscoAmbiente > 24 || riscoPredio > 90){
-    String alerta = "Alterta Risco ambiente!!\n";
-           alerta += mensagemRetorno();
-    bot.sendMessage("@CanalAlertaRiscos", alerta, "");
-    digitalWrite(ledRPin,HIGH);
-    digitalWrite(buzPin,HIGH);
-    delay(500);
-    digitalWrite(ledRPin,LOW);
-   digitalWrite(buzPin,LOW);
+
+  if (riscoAmbiente > 24 || riscoPredio > 60){
+    ledOn ("R",1000);
+    if (riscoAmbiente > 32 || riscoPredio > 80){
+      String alerta = "Alterta Risco ambiente!!\n";
+      alerta += mensagemRetorno();
+      bot.sendMessage("@CanalAlertaRiscos", alerta, "");
+      digitalWrite(buzPin,HIGH);
+      delay(500);
+      digitalWrite(buzPin,LOW);
+    }
   }
 }
 
@@ -419,7 +422,7 @@ void configuraWifi(){
   Serial.printf("\nConectando na rede Wifi! ");
   while (WiFi.status() != WL_CONNECTED && count < 50){
     Serial.print(".");
-    ledOn("I");
+    ledOn("I",100);
     count++;
   }
 
@@ -472,7 +475,7 @@ void configuraAWS(){
   Serial.printf("\nConectando na AWS iOT! Device: %s", DEVICE_NAME);
   while (!client.connect(DEVICE_NAME) && count < 50) {
     Serial.print(".");
-    ledOn("B");
+    ledOn("B",100);
     count++;
   }
 
@@ -537,7 +540,7 @@ void enviaTS(){
   }
   else{
     Serial.printf("Prolema ao atualizar canal. HTTP error code %S \n", String(mensagem));
-    ledOn ("R");
+    ledOn ("R",100);
   }
 }
 
@@ -613,35 +616,35 @@ String trataMensagemTelegram(String msg_recebida){
 
     if (comando_valido == false){
       resposta = "Comando invalido: "+msg_recebida;      
-      ledOn ("R");
+      ledOn ("R",100);
     }
     return resposta;
 }
 
-void ledOn (String tipo){
+void ledOn (String tipo, int tempo){
   if (tipo == "R" || tipo == "r"){
   digitalWrite(ledRPin, HIGH);
-  delay(100);
+  delay(tempo);
   digitalWrite(ledRPin, LOW);
-  delay(100);
+  delay(tempo);
   }
   if (tipo == "G"  || tipo == "g"){
   digitalWrite(ledGPin, HIGH);
-  delay(100);
+  delay(tempo);
   digitalWrite(ledGPin, LOW);
-  delay(100);
+  delay(tempo);
   }
   if (tipo == "B" || tipo == "b"){
   digitalWrite(ledBPin, HIGH);
-  delay(100);
+  delay(tempo);
   digitalWrite(ledBPin, LOW);
-  delay(100);
+  delay(tempo);
   }
   if (tipo == "I" || tipo == "i"){
   digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
+  delay(tempo);
   digitalWrite(LED_BUILTIN, LOW);
-  delay(100);
+  delay(tempo);
   }
 }
 
@@ -664,7 +667,7 @@ void setup(){
   while (!Serial) {;}
   while (DEVICE_ID != DEVICE_ID_ATUAL) {
    Serial.printf("\nDispositivo diferente do esperado, substituia o dispositivo ou Certificado - ID: %d \n", DEVICE_ID_ATUAL);
-   ledOn ("R");
+   ledOn ("R", 100);
    delay(5000);
   }
   inicializaPin();
